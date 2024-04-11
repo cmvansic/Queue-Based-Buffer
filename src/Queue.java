@@ -1,83 +1,90 @@
-public class Queue<T> implements QueueInterface<T> {
-    private Node<T> head, tail;
-    private int count;
-    private final int sizeLimit; //Not sure this is  ||  hold on to this.
+import java.util.ArrayList;
+import java.util.ListIterator;
 
-    private class Node<T> {
-        T element;
+public class Queue<T> implements QueueInterface<T> {
+    private static class Node<T> {
+        T data;
         Node<T> next;
 
-        public Node(T element) {
-            this.element = element;
+        Node(T data) {
+            this.data = data;
             this.next = null;
         }
     }
 
+    private Node<T> front, rear;
+    private int sizeLimit;
+    private int currentSize;
 
-    @Override
-    public void enqueue(Object element) throws QueueFullException {
+    public Queue(int sizeLimit) {
+        this.sizeLimit = sizeLimit;
+        this.front = this.rear = null;
+        this.currentSize = 0;
+    }
+
+    public void enqueue(T element) throws QueueFullException {
         if (isFull()) {
             throw new QueueFullException();
         }
-        Node<T> newNode = (Node<T>) new Node<>(element); //Might have to cast
-        if (isEmpty()) {
-            head = tail = newNode;
+        Node<T> newNode = new Node<>(element);
+        if (this.rear == null) {
+            this.front = this.rear = newNode;
         } else {
-            tail.next = newNode;
-            tail = newNode;
+            this.rear.next = newNode;
+            this.rear = newNode;
         }
-        count++;
+        currentSize++;
     }
 
-    @Override
     public T dequeue() throws QueueEmptyException {
         if (isEmpty()) {
             throw new QueueEmptyException();
         }
-
-        T element = head.element;
-        head = head.next;
-
-        count--;
-
-        if (isEmpty()) {
-            tail = null;
+        T data = this.front.data;
+        this.front = this.front.next;
+        if (this.front == null) {
+            this.rear = null;
         }
-        return element;
+        currentSize--;
+        return data;
     }
 
-    @Override
     public T peek() throws QueueEmptyException {
         if (isEmpty()) {
             throw new QueueEmptyException();
         }
-        return head.element;
+        return this.front.data;
     }
 
-    @Override
     public boolean isEmpty() {
-        return count == 0; //Changed from false
+        return this.currentSize == 0;
     }
 
-    @Override
     public boolean isFull() {
-        return count == sizeLimit;
+        return this.currentSize == sizeLimit;
     }
 
-    @Override
     public int size() {
-        return count;
+        return this.currentSize;
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder("[");
-        Node<T> current = head;
+        ArrayList<T> tempStack = new ArrayList<>();
+        Node<T> current = front;
+        // Push all elements to a temporary stack to reverse their order
         while (current != null) {
-            sb.append(current.element.toString());
-            if (current.next != null) {
+            tempStack.add(current.data);
+            current = current.next;
+        }
+
+        // Build the string from the temporary stack in reverse order
+        StringBuilder sb = new StringBuilder("[");
+        ListIterator<T> iter = tempStack.listIterator(tempStack.size());
+        while (iter.hasPrevious()) {
+            sb.append(iter.previous().toString());
+            if (iter.hasPrevious()) {
                 sb.append(", ");
             }
-            current = current.next;
         }
         sb.append("]");
         return sb.toString();
